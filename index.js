@@ -25,6 +25,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const coffeesCollections = client.db('CoffeesDB').collection('Coffee')
+    const usersCollections = client.db('CoffeesDB').collection('Users')
 
     app.get('/coffees', async(req,res)=>{
         const coffeesData = req.body;
@@ -63,7 +64,34 @@ async function run() {
         console.log(result)
         res.send(result)
     })
-
+    // For Users
+    app.get('/users', async(req, res)=>{
+      const allUsers = req.body;
+      const result = await usersCollections.find(allUsers).toArray()
+      res.send(result)
+    })
+    app.post('/users', async(req, res)=>{
+      const users = req.body;
+      const result = await usersCollections.insertOne(users)
+      res.send(result)
+    })
+    app.patch('/users', async(req, res)=>{
+      const newUser = req.body;
+      const filter = {email: newUser?.email}
+      const updatedDocs = {
+        $set: {
+          lastSignInTime : newUser?.lastSignInTime
+        }
+      }
+      const result = await usersCollections.updateOne(filter, updatedDocs)
+      res.send(result)
+    })
+    app.delete('/users/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await usersCollections.deleteOne(query)
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
